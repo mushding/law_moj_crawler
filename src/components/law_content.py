@@ -13,12 +13,14 @@ from utils.law import get_last_modified_date, get_today, split_no_and_content
 from utils.util import write_json
 from utils.reason import convert_article_chinese_to_alphabet
 
-continue_flag = False
-
 class LawCrawler:
     def __init__(self):
-        self.last_error_page = 1
+        self.last_error_page = 56
         self.current_page = 1
+        self.pass_first = False
+        self.pass_second = False
+        self.pass_third = False
+        self.pass_forth = False
         
     def _get_law_content(self, driver, is_abandon):
         law_json = {'LawLevel': '法律'}
@@ -43,7 +45,7 @@ class LawCrawler:
                 blue_text = None
 
             try:
-                # could be 章節款
+                # could be 章節款目
                 teal_text_list = content.find_elements(By.XPATH, './/font[@color="#3e68ab"]')
             except:
                 teal_text_list = None
@@ -56,8 +58,9 @@ class LawCrawler:
             article_content = content.find_element(By.XPATH, './/td[contains(@id, "part")]/table/tbody/tr/td[2]').text
 
             if blue_text:
-                book_pattern = '第[一二三四五六七八九十百千]+編'
-                chapter_pattern = '第[一二三四五六七八九十百千]+章'
+                book_pattern = r'第[一二三四五六七八九十百千]+編'
+                chapter_pattern = r'第[一二三四五六七八九十百千]+章'
+                category_pattern = r'第[一二三四五六七八九十百千]+類'
                 no, content = split_no_and_content(blue_text)
                 no = convert_article_chinese_to_alphabet(no)
                 if re.match(book_pattern, blue_text):
@@ -72,34 +75,49 @@ class LawCrawler:
                         'ArticleNo': no,
                         'ArticleContent': content
                     })
+                elif re.match(category_pattern, blue_text):
+                    articles.append({
+                        'ArticleType': 'T',
+                        'ArticleNo': no,
+                        'ArticleContent': content
+                    })
 
             if teal_text_list:
                 for teal_text in teal_text_list:
-                    teal_text = teal_text.text
-                    chapter_pattern = '第[一二三四五六七八九十百千]+章'
-                    section_pattern = '第[一二三四五六七八九十百千]+節'
-                    paragraph_pattern = '第[一二三四五六七八九十百千]+款'
-                    no, content = split_no_and_content(teal_text)
-                    no = convert_article_chinese_to_alphabet(no)
-                    if re.match(chapter_pattern, teal_text):
-                        articles.append({
-                            'ArticleType': 'C',
-                            'ArticleNo': no,
-                            'ArticleContent': content
-                        })
-                    elif re.match(section_pattern, teal_text):
-                        articles.append({
-                            'ArticleType': 'S',
-                            'ArticleNo': no,
-                            'ArticleContent': content
-                        })
-                    elif re.match(paragraph_pattern, teal_text):
-                        articles.append({
-                            'ArticleType': 'P',
-                            'ArticleNo': no,
-                            'ArticleContent': content
-                        })
+                    teal_texts = teal_text.text
 
+                    for teal_text in teal_texts.split('\n'):
+                        chapter_pattern = r'第[一二三四五六七八九十百千]+章'
+                        section_pattern = r'第[一二三四五六七八九十百千]+節'
+                        paragraph_pattern = r'第[一二三四五六七八九十百千]+款'
+                        index_pattern = r'第[一二三四五六七八九十百千]+目'
+                        no, content = split_no_and_content(teal_text)
+                        no = convert_article_chinese_to_alphabet(no)
+                        content = content.replace(' ', '')
+                        if re.match(chapter_pattern, teal_text):
+                            articles.append({
+                                'ArticleType': 'C',
+                                'ArticleNo': no,
+                                'ArticleContent': content
+                            })
+                        elif re.match(section_pattern, teal_text):
+                            articles.append({
+                                'ArticleType': 'S',
+                                'ArticleNo': no,
+                                'ArticleContent': content
+                            })
+                        elif re.match(paragraph_pattern, teal_text):
+                            articles.append({
+                                'ArticleType': 'P',
+                                'ArticleNo': no,
+                                'ArticleContent': content
+                            })
+                        elif re.match(index_pattern, teal_text):
+                            articles.append({
+                                'ArticleType': 'I',
+                                'ArticleNo': no,
+                                'ArticleContent': content
+                            })
             if not article_no:
                 law_json['LawForeword'] = article_content
                 continue
@@ -107,7 +125,7 @@ class LawCrawler:
             articles.append({
                 'ArticleType': 'A',
                 'ArticleNo': convert_article_chinese_to_alphabet(article_no),
-                'ArticleContent': article_content
+                'ArticleContent': article_content.replace(' ', '')
             })
         law_json['LawArticles'] = articles
 
@@ -312,6 +330,10 @@ class LawCrawler:
                     )
                 except:
                     print("沒有下一頁按鈕，結束爬蟲")
+                    progress.stop()
+                    driver.quit()
+                    self.current_page = 1
+                    self.last_error_page = 1
                     break
 
 
@@ -350,8 +372,10 @@ class LawCrawler:
 
                 driver.quit()
                 break
-            except:
+            except Exception as e:
                 print(f"第 {self.current_page} 頁發生錯誤，重新嘗試")
-                driver.quit()
+                print(e)
                 self.last_error_page = self.current_page
+                self.current_page = 1
+                driver.quit()
                 continue

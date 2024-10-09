@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 
 def _is_title_chinese_regex(text):
-    return bool(re.match(r'^第[一二三四五六七八九十百千]+([編章節款條])(之[一二三四五六七八九十百千]+)?', text))
+    return bool(re.match(r'^第[一二三四五六七八九十百千]+([編章類節款目條])(之[一二三四五六七八九十百千]+)?', text))
 
 
 def _is_article_name(word):
@@ -86,7 +86,7 @@ def _get_column_separator(t_min, t_max, portion):
 
 
 def _get_article_type(text):
-    match = re.match(r'^第[一二三四五六七八九十百千]+([編章節條])(之[一二三四五六七八九十百千]+)?', text)
+    match = re.match(r'^第[一二三四五六七八九十百千]+([編章類節款目條])(之[一二三四五六七八九十百千]+)?', text)
     if match:
         type = match.group(1)
         if type == '編':
@@ -97,6 +97,8 @@ def _get_article_type(text):
             return 'S'
         if type == '款':
             return 'P'
+        if type == '目':
+            return 'I'
         if type == '條':
             return 'A'
     if re.match(r'^修正名稱$', text):
@@ -119,15 +121,15 @@ def _get_column_name(separator, x0, x1):
 
 def convert_article_chinese_to_alphabet(text):
     text = text.replace(' ', '')
-    # 處理特殊情況：帶有 "之" 的編章節款條
-    special_case = re.match(r'^第([一二三四五六七八九十百千]+)([編章節款條])之([一二三四五六七八九十百千])$', text)
+    # 處理特殊情況：帶有 "之" 的編章類節款目條
+    special_case = re.match(r'^第([一二三四五六七八九十百千]+)([編章類節款目條])之([一二三四五六七八九十百千])$', text)
     if special_case:
         main_num = cn2an.cn2an(special_case.group(1))
         sub_num = cn2an.cn2an(special_case.group(3))
         return f'第 {main_num}-{sub_num} {special_case.group(2)}'
 
-    # 處理普通情況：只有編章節款條
-    match = re.match(r'^第([一二三四五六七八九十百千]+)([編章節款條])$', text)
+    # 處理普通情況：只有編章類節款目條
+    match = re.match(r'^第([一二三四五六七八九十百千]+)([編章類節款目條])$', text)
     if match:
         num = cn2an.cn2an(match.group(1))
         return f'第 {num} {match.group(2)}'
@@ -137,7 +139,7 @@ def convert_article_chinese_to_alphabet(text):
 
 
 def _get_chinese_article(text):
-    match = re.match(r'^(第[一二三四五六七八九十百千]+[編章節款條](?:之[一二三四五六七八九十百千]+)?)', text)
+    match = re.match(r'^(第[一二三四五六七八九十百千]+[編章類節款目條](?:之[一二三四五六七八九十百千]+)?)', text)
     if match:
         return convert_article_chinese_to_alphabet(match.group(1))
     return None

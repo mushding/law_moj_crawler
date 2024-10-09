@@ -24,7 +24,7 @@ def get_today():
 
 def split_no_and_content(text):
     # 用正則表達式匹配章節號和章節內容
-    match = re.match(r'(.*第[一二三四五六七八九十百千]+[編章節款條])(.+)$', text)
+    match = re.match(r'(.*第[一二三四五六七八九十百千]+[編章類節款目條])(.+)$', text)
     if match:
         return match.group(1), match.group(2)
     return None, None
