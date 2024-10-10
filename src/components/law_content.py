@@ -15,9 +15,9 @@ from utils.reason import convert_article_chinese_to_alphabet
 
 class LawCrawler:
     def __init__(self):
-        self.last_error_page = 56
+        self.last_error_page = 39
         self.current_page = 1
-        self.pass_first = False
+        self.pass_first = True
         self.pass_second = False
         self.pass_third = False
         self.pass_forth = False
@@ -58,7 +58,7 @@ class LawCrawler:
             article_content = content.find_element(By.XPATH, './/td[contains(@id, "part")]/table/tbody/tr/td[2]').text
 
             if blue_text:
-                book_pattern = r'第[一二三四五六七八九十百千]+編'
+                book_pattern = r'第[一二三四五六七八九十百千]+(篇|編)'
                 chapter_pattern = r'第[一二三四五六七八九十百千]+章'
                 category_pattern = r'第[一二三四五六七八九十百千]+類'
                 no, content = split_no_and_content(blue_text)
@@ -85,12 +85,13 @@ class LawCrawler:
             if teal_text_list:
                 for teal_text in teal_text_list:
                     teal_texts = teal_text.text
-
                     for teal_text in teal_texts.split('\n'):
                         chapter_pattern = r'第[一二三四五六七八九十百千]+章'
                         section_pattern = r'第[一二三四五六七八九十百千]+節'
                         paragraph_pattern = r'第[一二三四五六七八九十百千]+款'
                         index_pattern = r'第[一二三四五六七八九十百千]+目'
+                        if not re.match(chapter_pattern, teal_text) and not re.match(section_pattern, teal_text) and not re.match(paragraph_pattern, teal_text) and not re.match(index_pattern, teal_text):
+                            continue
                         no, content = split_no_and_content(teal_text)
                         no = convert_article_chinese_to_alphabet(no)
                         content = content.replace(' ', '')
@@ -118,6 +119,7 @@ class LawCrawler:
                                 'ArticleNo': no,
                                 'ArticleContent': content
                             })
+                            
             if not article_no:
                 law_json['LawForeword'] = article_content
                 continue
@@ -351,24 +353,24 @@ class LawCrawler:
                 laws_view.click()
 
                 # 現行法 的 內容
-                if not pass_first:
+                if not self.pass_first:
                     self.handle_law_list(driver, total_pages=101)
-                pass_first = True
+                self.pass_first = True
 
                 # 廢止法 的 內容
-                if not pass_second:
+                if not self.pass_second:
                     self.handle_law_list(driver, total_pages=50, is_abandon=True)
-                pass_second = True
+                self.pass_second = True
 
                 # 現行法 的 修法原因
-                if not pass_third:
+                if not self.pass_third:
                     self.handle_law_list(driver, total_pages=101, is_reason=True)
-                pass_third = True
+                self.pass_third = True
 
                 # 廢止法 的 修法原因
-                if not pass_forth:
+                if not self.pass_forth:
                     self.handle_law_list(driver, total_pages=50, is_reason=True, is_abandon=True)
-                pass_forth = True
+                self.pass_forth = True
 
                 driver.quit()
                 break
