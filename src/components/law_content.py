@@ -22,11 +22,11 @@ class LawCrawler:
         self.pass_third = False
         self.pass_forth = False
         
-    def _get_law_content(self, driver, is_abandon):
+    def _get_law_content(self, driver, law_name, is_abandon):
         law_json = {'LawLevel': '法律'}
-        law_name = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr[3]/td/table/tbody/tr/td').text
+        law_name_local = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr[3]/td/table/tbody/tr/td').text
         law_modified_date = get_last_modified_date(driver.find_element(By.XPATH, '//*[@id="C_box"]/table/tbody/tr[1]/td').text)
-        law_json['LawName'] = law_name
+        law_json['LawName'] = law_name_local
         law_json['LawModifiedDate'] = law_modified_date
         law_json['LawURL'] = driver.current_url
         if is_abandon:
@@ -192,11 +192,11 @@ class LawCrawler:
         )
 
 
-    def _get_law_reason_link(self, driver, is_abandon):
+    def _get_law_reason_link(self, driver, law_name, is_abandon):
         law_json = {'LawLevel': '法律'}
-        law_name = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr[3]/td/table/tbody/tr/td').text
+        law_name_local = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr[3]/td/table/tbody/tr/td').text
         law_modified_date = get_last_modified_date(driver.find_element(By.XPATH, '//*[@id="C_box"]/table/tbody/tr[1]/td').text)
-        law_json['LawName'] = law_name
+        law_json['LawName'] = law_name_local
         law_json['LawModifiedDate'] = law_modified_date
         law_json['LawURL'] = driver.current_url
         if is_abandon:
@@ -256,10 +256,10 @@ class LawCrawler:
 
                 if is_reason:
                     print(f'[reason] 正在處理: {law_name} / {history_text} 的修法原因')
-                    self._get_law_reason_link(driver, is_abandon)
+                    self._get_law_reason_link(driver, law_name, is_abandon)
                 else:
                     print(f'[history] 正在處理: {law_name} / {history_text} 的法條內容')
-                    self._get_law_content(driver, is_abandon)
+                    self._get_law_content(driver, law_name, is_abandon)
 
                 driver.back()
                 WebDriverWait(driver, 10).until(
@@ -340,7 +340,6 @@ class LawCrawler:
 
 
     def get_law_content_by_crawler(self):
-        pass_first, pass_second, pass_third, pass_forth = False, False, False, False
         while True:
             try:
                 driver = webdriver.Chrome()

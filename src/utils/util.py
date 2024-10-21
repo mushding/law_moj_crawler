@@ -6,9 +6,26 @@ from datetime import datetime
 
 def fetch_html(url):
     # Random sleep to mimic user behavior
-    # time.sleep(random.uniform(1, 5))
+    headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "max-age=0",
+        "Connection": "keep-alive",
+        "Cookie": "ASP.NET_SessionId=53m5byrglvro1rwuqmgo1kfx; showmode=",
+        "DNT": "1",
+        "Host": "law.moj.gov.tw",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        "sec-ch-ua": '"Chromium";v="129", "Not=A?Brand";v="8"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"macOS"'
+    }
     response = requests.get(url)
-    response.raise_for_status()
     return response.text
 
 

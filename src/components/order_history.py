@@ -3,7 +3,8 @@ from pathlib import Path
 import os
 
 from utils.util import fetch_html, read_json, write_json, convert_update_date, extract_pcode
-from utils.history import extract_history_links, parse_law_articles, add_law_id_field, generalize_chapters, add_history_index_field
+from utils.history import extract_history_links, parse_law_articles, add_law_id_field, generalize_chapters
+
 
 def ch_order_to_history(json_file_path):
     # global variables
@@ -14,7 +15,7 @@ def ch_order_to_history(json_file_path):
     update_date = convert_update_date(data.get('UpdateDate', ''))
     laws = data.get('Laws', [])
     print(f'Found {len(laws)} laws.')
-    
+
     history_folder = Path('data/order') / update_date / 'history'
 
     # loop through all laws
@@ -62,24 +63,3 @@ def ch_order_to_history(json_file_path):
         law = generalize_chapters(law)
         write_json(history_folder / pcode, latestModifiedDate, add_law_id_field(pcode, lnndate, law))
         print(f'Save order w/ history of: {pcode} / {latestModifiedDate}_latest, Success !\n')
-
-
-def order_add_history_field(json_file_path):
-    data = read_json(json_file_path)
-    update_date = convert_update_date(data.get('UpdateDate', ''))
-
-    history_folder = Path('data/order') / update_date / 'history'
-    order_folder = Path('data/order') / update_date / 'order'
-    order_folder.mkdir(parents=True, exist_ok=True)
-    
-    for pcode in track(os.listdir(history_folder)):
-        print(f'Processing {pcode} ...')
-        dates = os.listdir(history_folder / pcode)
-        dates = [history.replace('.json', '') for history in dates]
-        dates.sort(reverse=True)
-
-        for idx, date in enumerate(dates):
-            print(f'Processing {pcode} / {dates[idx:]} ...')
-            date_json = read_json(history_folder / pcode / f'{date}.json')
-            date_json = add_history_index_field(date_json, dates[idx:])
-            write_json(order_folder / pcode, date, date_json)
