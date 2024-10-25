@@ -11,6 +11,7 @@ def _gen_pcode_not_found_in_ch_law(custom_pcode):
 
 def _gen_law_name_pcode_map(ch_law_json):
     ch_law = read_json(ch_law_json)
+    law_name_ch_law_lisly_map = read_json(Path('data/operation/law_name_ch_law_lisly_map.json'))
     law_name_pcode_map = {}
 
     laws = ch_law.get('Laws', [])
@@ -18,6 +19,11 @@ def _gen_law_name_pcode_map(ch_law_json):
     for law in laws:
         pcode = extract_pcode(law)
         law_name = law.get('LawName', '')
+        
+        # map some law name from 全國法規資料庫 to 立法院法律系統
+        if law_name in law_name_ch_law_lisly_map:
+            law_name = law_name_ch_law_lisly_map[law_name]
+
         law_name_pcode_map[law_name] = pcode
 
     return law_name_pcode_map

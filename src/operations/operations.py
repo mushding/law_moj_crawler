@@ -2,6 +2,8 @@ from pathlib import Path
 
 from operations.utils.pcode import add_pcode_to_law_history
 from operations.utils.law_url import add_law_link_to_law_history
+from operations.utils.detail_field import add_detail_field
+from operations.utils.lisly_additional_field import add_lisly_not_found_to_law_history
 
 def operations():
     law_version = '20241011'
@@ -19,5 +21,7 @@ def operations():
 
 
     # add_pcode_to_law_history(ch_law, law_history_folder, law_operation_history_folder)
-    add_law_link_to_law_history(law_operation_history_folder)
+    # add_law_link_to_law_history(law_operation_history_folder)
+    # add_detail_field(ch_law, law_operation_history_folder)
+    add_lisly_not_found_to_law_history(ch_law, law_operation_history_folder)
 
