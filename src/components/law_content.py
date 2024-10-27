@@ -11,17 +11,17 @@ import random
 
 from utils.law import get_last_modified_date, get_today, split_no_and_content
 from utils.util import write_json
-from utils.reason import convert_article_chinese_to_alphabet
+
 
 class LawCrawler:
     def __init__(self):
-        self.last_error_page = 39
+        self.last_error_page = 1
         self.current_page = 1
-        self.pass_first = True
+        self.pass_first = False
         self.pass_second = False
         self.pass_third = False
         self.pass_forth = False
-        
+
     def _get_law_content(self, driver, law_name, is_abandon):
         law_json = {'LawLevel': '法律'}
         law_name_local = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr[3]/td/table/tbody/tr/td').text
@@ -39,8 +39,9 @@ class LawCrawler:
 
         for content in contents:
             try:
-                # could be 編章
+                # could be 編篇章
                 blue_text = content.find_element(By.XPATH, './/font[@color="0000FF"]').text
+                blue_text = blue_text.replace(' ', '')
             except:
                 blue_text = None
 
@@ -52,89 +53,48 @@ class LawCrawler:
 
             try:
                 article_no = content.find_element(By.XPATH, './/font[@color="C000FF"]').text
+                article_no = article_no.replace(' ', '')
             except:
                 article_no = None
 
             article_content = content.find_element(By.XPATH, './/td[contains(@id, "part")]/table/tbody/tr/td[2]').text
+            article_content = article_content.replace(' ', '')
 
             if blue_text:
-                book_pattern = r'第[一二三四五六七八九十百千]+(篇|編)'
-                chapter_pattern = r'第[一二三四五六七八九十百千]+章'
-                category_pattern = r'第[一二三四五六七八九十百千]+類'
                 no, content = split_no_and_content(blue_text)
-                no = convert_article_chinese_to_alphabet(no)
-                if re.match(book_pattern, blue_text):
-                    articles.append({
-                        'ArticleType': 'B',
-                        'ArticleNo': no,
-                        'ArticleContent': content
-                    })
-                elif re.match(chapter_pattern, blue_text):
-                    articles.append({
-                        'ArticleType': 'C',
-                        'ArticleNo': no,
-                        'ArticleContent': content
-                    })
-                elif re.match(category_pattern, blue_text):
-                    articles.append({
-                        'ArticleType': 'T',
-                        'ArticleNo': no,
-                        'ArticleContent': content
-                    })
+                articles.append({
+                    'ArticleType': 'X',  # To be determined later at operation
+                    'ArticleNo': no,
+                    'ArticleContent': content
+                })
 
             if teal_text_list:
                 for teal_text in teal_text_list:
                     teal_texts = teal_text.text
                     for teal_text in teal_texts.split('\n'):
-                        chapter_pattern = r'第[一二三四五六七八九十百千]+章'
-                        section_pattern = r'第[一二三四五六七八九十百千]+節'
-                        paragraph_pattern = r'第[一二三四五六七八九十百千]+款'
-                        index_pattern = r'第[一二三四五六七八九十百千]+目'
-                        if not re.match(chapter_pattern, teal_text) and not re.match(section_pattern, teal_text) and not re.match(paragraph_pattern, teal_text) and not re.match(index_pattern, teal_text):
-                            continue
+                        teal_text = teal_text.replace(' ', '')
                         no, content = split_no_and_content(teal_text)
-                        no = convert_article_chinese_to_alphabet(no)
-                        content = content.replace(' ', '')
-                        if re.match(chapter_pattern, teal_text):
-                            articles.append({
-                                'ArticleType': 'C',
-                                'ArticleNo': no,
-                                'ArticleContent': content
-                            })
-                        elif re.match(section_pattern, teal_text):
-                            articles.append({
-                                'ArticleType': 'S',
-                                'ArticleNo': no,
-                                'ArticleContent': content
-                            })
-                        elif re.match(paragraph_pattern, teal_text):
-                            articles.append({
-                                'ArticleType': 'P',
-                                'ArticleNo': no,
-                                'ArticleContent': content
-                            })
-                        elif re.match(index_pattern, teal_text):
-                            articles.append({
-                                'ArticleType': 'I',
-                                'ArticleNo': no,
-                                'ArticleContent': content
-                            })
-                            
+                        articles.append({
+                            'ArticleType': 'X',
+                            'ArticleNo': no,
+                            'ArticleContent': content
+                        })
+
             if not article_no:
                 law_json['LawForeword'] = article_content
                 continue
 
             articles.append({
                 'ArticleType': 'A',
-                'ArticleNo': convert_article_chinese_to_alphabet(article_no),
-                'ArticleContent': article_content.replace(' ', '')
+                'ArticleNo': article_no,
+                'ArticleContent': article_content
             })
+
         law_json['LawArticles'] = articles
 
         law_path = Path('data/law') / get_today() / 'history'
         law_path.mkdir(parents=True, exist_ok=True)
         write_json(law_path / law_name, law_modified_date, law_json)
-
 
     def _get_law_reason(self, driver):
         articles = []
@@ -148,11 +108,11 @@ class LawCrawler:
             reason = reason.text
             articles.append({
                 'ArticleType': 'A',
-                'Modified': convert_article_chinese_to_alphabet(article_no),
+                'Modified': article_no,
+                'Current': "",
                 'Description': reason
             })
         return articles
-
 
     def _get_abandon_reason(self, driver, law_json):
         try:
@@ -190,7 +150,6 @@ class LawCrawler:
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
-
 
     def _get_law_reason_link(self, driver, law_name, is_abandon):
         law_json = {'LawLevel': '法律'}
@@ -239,7 +198,6 @@ class LawCrawler:
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
 
-
     def _handle_law_content(self, driver, law_name, is_abandon, is_reason):
         table = driver.find_element(By.XPATH, '//*[@id="TO"]/table/tbody/tr[3]/td/div/table')
         histories = table.find_elements(By.XPATH, './/tr[td/a]')
@@ -267,7 +225,6 @@ class LawCrawler:
                 )
             except Exception as e:
                 print(history_link.text, '發生錯誤: ', e)
-
 
     def _handle_law_view(self, driver, is_abandon, is_reason):
         table = driver.find_element(By.XPATH, '/html/body/form/table/tbody/tr[2]/td/table/tbody/tr[3]/td/table')
@@ -300,7 +257,6 @@ class LawCrawler:
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
-
 
     def handle_law_list(self, driver, total_pages, is_abandon=False, is_reason=False):
         with Progress() as progress:
@@ -337,7 +293,6 @@ class LawCrawler:
                     self.current_page = 1
                     self.last_error_page = 1
                     break
-
 
     def get_law_content_by_crawler(self):
         while True:

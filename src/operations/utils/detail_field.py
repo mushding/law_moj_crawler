@@ -26,7 +26,7 @@ def add_detail_field(ch_law, law_operation_history_folder):
             "LawEffectiveDate": law.get('LawEffectiveDate', ""),
             "LawEffectiveNote": law.get('LawEffectiveNote', ""),
             "EngLawName": law.get('EngLawName', ""),
-            "LawAttachments": law.get('LawAttachments', {})
+            "LawAttachments": law.get('LawAttachements', {})
         }
         law_name = law.get('LawName', "")
         # map some law name from 全國法規資料庫 to 立法院法律系統

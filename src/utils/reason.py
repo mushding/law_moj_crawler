@@ -119,29 +119,10 @@ def _get_column_name(separator, x0, x1):
         return 'Error'
 
 
-def convert_article_chinese_to_alphabet(text):
-    text = text.replace(' ', '')
-    # 處理特殊情況：帶有 "之" 的編篇章類節款目條
-    special_case = re.match(r'^第([一二三四五六七八九十百千]+)([編篇章類節款目條])之([一二三四五六七八九十百千])$', text)
-    if special_case:
-        main_num = cn2an.cn2an(special_case.group(1))
-        sub_num = cn2an.cn2an(special_case.group(3))
-        return f'第 {main_num}-{sub_num} {special_case.group(2)}'
-
-    # 處理普通情況：只有編篇章類節款目條
-    match = re.match(r'^第([一二三四五六七八九十百千]+)([編篇章類節款目條])$', text)
-    if match:
-        num = cn2an.cn2an(match.group(1))
-        return f'第 {num} {match.group(2)}'
-
-    # 如果沒有匹配到任何模式，返回原文
-    return text
-
-
 def _get_chinese_article(text):
     match = re.match(r'^(第[一二三四五六七八九十百千]+[編篇章類節款目條](?:之[一二三四五六七八九十百千]+)?)', text)
     if match:
-        return convert_article_chinese_to_alphabet(match.group(1))
+        return match.group(1)
     return None
 
 
@@ -179,6 +160,7 @@ def _is_scan_pdf(doc):
         return True
     return False
 
+
 def _is_two_columns(doc):
     match_text = ""
     first_page = doc[0]
@@ -188,10 +170,11 @@ def _is_two_columns(doc):
         if _is_article_name(word):
             continue
         _, _, _, _, text, _, _, _ = word
-        match_text += text  
+        match_text += text
         if '條文說明' in match_text:
             return True
     return False
+
 
 def process_pdf_to_json(doc, pcode, lnndate, error_pcodes):
     # global variables
