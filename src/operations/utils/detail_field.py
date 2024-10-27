@@ -18,7 +18,7 @@ def add_detail_field(ch_law, law_operation_history_folder):
     law_name_lisly_not_found_list = []
     laws = ch_law.get('Laws', [])
 
-    for law in track(laws):
+    for law in track(laws, description='[bold red]Adding detail field...'):
         detail_field = {
             "LawCategory": law.get('LawCategory', ""),
             "LawHasEngVersion": law.get('LawHasEngVersion', ""),

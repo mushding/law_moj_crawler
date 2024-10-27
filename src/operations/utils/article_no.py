@@ -39,10 +39,10 @@ def _is_valid_article_no(text):
     return bool(match)
 
 def convert_article_no(law_operation_history_folder):
-    for pcode in track(os.listdir(law_operation_history_folder)):
+    for pcode in track(os.listdir(law_operation_history_folder), description='[bold red]Converting article no...'):
         pcode_folder = law_operation_history_folder / pcode
+        print(f'Processing {pcode}...')
         for modified_date in os.listdir(pcode_folder):
-            print(f'Processing {pcode} {modified_date}...')
             law = read_json(law_operation_history_folder / pcode / modified_date)
             law_articles = law.get('LawArticles', [])
             for law_article in law_articles:

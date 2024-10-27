@@ -16,5 +16,5 @@ if __name__ == '__main__':
     # law_crawler = LawCrawler()
     # law_crawler.get_law_content_by_crawler()
 
-    # part3 operations
+    # part3 law operations
     operations()

@@ -34,11 +34,11 @@ def add_pcode_to_law_history(ch_law_json, law_history_folder, law_operation_hist
     law_name_pcode_map = _gen_law_name_pcode_map(ch_law_json)
 
     law_names = os.listdir(law_history_folder)
-    for law_name in track(law_names):
+    for law_name in track(law_names, description='[bold red]Adding pcode to law history...'):
         try:
             pcode = law_name_pcode_map[law_name]
         except KeyError:
-            print(f'No pcode found for {law_name}, generating custom pcode...')
+            # print(f'No pcode found for {law_name}, generating custom pcode...')
             pcode = _gen_pcode_not_found_in_ch_law(custom_pcode)
             law_name_pcode_map[law_name] = pcode
             custom_pcode += 1

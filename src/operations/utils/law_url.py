@@ -84,14 +84,14 @@ def add_law_link_to_law_history(law_operation_history_folder):
     pcode_law_name_map = {v: k for k, v in law_name_pcode_map.items()}
 
     law_codes = os.listdir(law_operation_history_folder)
-    for law_code in track(law_codes):
+    for law_code in track(law_codes, description='[bold red]Adding law link to law history...'):
         law_name = pcode_law_name_map[law_code]
         for modified_date in os.listdir(law_operation_history_folder / law_code):
             law = read_json(law_operation_history_folder / law_code / modified_date)
             try:
                 law['LawURL'] = law_name_url_map[law_name]
             except KeyError:
-                print(f'No law link found for {law_name} / {modified_date}, skipping...')
+                # print(f'No law link found for {law_name} / {modified_date}, skipping...')
                 continue
             write_json(law_operation_history_folder / law_code, modified_date.split('.')[0], law)
             # print(f'Add law link to {law_code} / {modified_date}, Success !')
